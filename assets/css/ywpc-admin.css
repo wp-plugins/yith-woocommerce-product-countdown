@@ -1,0 +1,11 @@
+.woocommerce_options_panel .sales_countdown_dates_fields .short:first-of-type {
+    margin-bottom: 1em;
+}
+
+.woocommerce_options_panel .sales_countdown_dates_fields .short:nth-of-type(2) {
+    clear: left;
+}
+
+#woocommerce-product-data ul.wc-tabs li.sales_countdown_tab a:before {
+    content: "\e012";
+}
