@@ -6,6 +6,18 @@
     clear: left;
 }
 
-#woocommerce-product-data ul.wc-tabs li.sales_countdown_tab a:before {
+#woocommerce-product-data ul.wc-tabs li.product_countdown_tab a:before {
     content: "\e012";
+}
+
+.ywpc-sales .form-field img.help_tip {
+    margin-left: 0;
+}
+
+.ywpc-preview {
+    width: 100%
+}
+
+.ywpc-preview * {
+    box-sizing: border-box;
 }

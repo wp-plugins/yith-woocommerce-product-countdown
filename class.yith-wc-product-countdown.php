@@ -100,18 +100,18 @@ if ( !class_exists( 'YITH_WC_Product_Countdown' ) ) {
             // Include required files
             $this->includes();
 
-            if ( get_option( 'ywpc_enable_plugin' ) ) {
+            if ( get_option( 'ywpc_enable_plugin' ) == 'yes' ) {
 
                 if ( is_admin() ) {
 
                     add_filter( 'woocommerce_product_write_panel_tabs', array( $this, 'add_countdown_tab' ), 98 );
-                    add_action( 'woocommerce_process_product_meta', array( $this, 'save_product_tab_metabox' ), 9, 2 );
+                    add_action( 'woocommerce_process_product_meta', array( $this, 'save_countdown_tab' ), 10, 2 );
                     add_action( 'admin_enqueue_scripts', array( $this, 'admin_scripts' ) );
 
                 }
                 else {
 
-                    add_action( 'woocommerce_before_main_content', array( $this, 'show_sales_countdown' ), 5 );
+                    add_action( 'woocommerce_before_main_content', array( $this, 'check_show_ywpc_product' ), 5 );
                     add_action( 'wp_enqueue_scripts', array( $this, 'frontend_scripts' ) );
 
                 }
@@ -138,6 +138,10 @@ if ( !class_exists( 'YITH_WC_Product_Countdown' ) ) {
         }
 
         /**
+         * ADMIN FUNCTIONS
+         */
+
+        /**
          * Add a panel under YITH Plugins tab
          *
          * @since   1.0.0
@@ -152,15 +156,17 @@ if ( !class_exists( 'YITH_WC_Product_Countdown' ) ) {
                 return;
             }
 
-            $admin_tabs = array(
-                'general' => __( 'General', 'ywpc' ),
-            );
+            $admin_tabs = array();
 
             if ( defined( 'YWPC_PREMIUM' ) ) {
-
+                $admin_tabs['premium-general'] = __( 'General', 'ywpc' );
+                $admin_tabs['style']           = __( 'Customization', 'ywpc' );
+                $admin_tabs['bulk']            = __( 'Bulk Operations', 'ywpc' );
+                $admin_tabs['topbar']          = __( 'Top/Bottom Countdown bar', 'ywpc' );
             }
             else {
-                //$admin_tabs['premium-landing'] = __( 'Premium Version', 'ywpc' );
+                $admin_tabs['general']         = __( 'General', 'ywpc' );
+                $admin_tabs['premium-landing'] = __( 'Premium Version', 'ywpc' );
             }
 
             $args = array(
@@ -189,7 +195,9 @@ if ( !class_exists( 'YITH_WC_Product_Countdown' ) ) {
          */
         public function admin_scripts() {
 
-            wp_enqueue_script( 'ywpc-admin', YWPC_ASSETS_URL . '/js/ywpc-admin.js', array( 'jquery', 'wc-admin-product-meta-boxes' ) );
+            $suffix   = defined( 'SCRIPT_DEBUG' ) && SCRIPT_DEBUG ? '' : '.min';
+
+            wp_enqueue_script( 'ywpc-admin', YWPC_ASSETS_URL . '/js/ywpc-admin' . $suffix . '.js', array( 'jquery', 'wc-admin-product-meta-boxes' ) );
             wp_enqueue_style( 'ywpc-admin', YWPC_ASSETS_URL . '/css/ywpc-admin.css' );
 
             $js_vars = array(
@@ -197,24 +205,6 @@ if ( !class_exists( 'YITH_WC_Product_Countdown' ) ) {
             );
 
             wp_localize_script( 'ywpc-admin', 'ywpc', $js_vars );
-
-        }
-
-        /**
-         * Enqueue frontend script files
-         *
-         * @since   1.0.0
-         * @return  void
-         * @author  Alberto Ruggiero
-         */
-        public function frontend_scripts() {
-
-            $suffix   = defined( 'SCRIPT_DEBUG' ) && SCRIPT_DEBUG ? '' : '.min';
-            $template = get_option( 'ywpc_style_template', '1' );
-
-            wp_enqueue_script( 'jquery-plugin', YWPC_ASSETS_URL . '/js/jquery.plugin' . $suffix . '.js', array( 'jquery' ) );
-            wp_enqueue_script( 'jquery-countdown', YWPC_ASSETS_URL . '/js/jquery.countdown.js', array( 'jquery' ), '2.0.2' );
-            wp_enqueue_style( 'ywpc-frontend', YWPC_ASSETS_URL . '/css/ywpc-style-' . $template . '.css' );
 
         }
 
@@ -258,12 +248,6 @@ if ( !class_exists( 'YITH_WC_Product_Countdown' ) ) {
 
             include( YWPC_TEMPLATE_PATH . '/admin/countdown-tab.php' );
 
-            if ( defined( 'YWPC_PREMIUM' ) ) {
-
-                $this->get_premium_options();
-
-            }
-
         }
 
         /**
@@ -273,81 +257,101 @@ if ( !class_exists( 'YITH_WC_Product_Countdown' ) ) {
          * @return  void
          * @author  Alberto Ruggiero
          */
-        public function save_product_tab_metabox() {
+        public function save_countdown_tab() {
 
             global $post;
 
             update_post_meta( $post->ID, '_ywpc_enabled', isset( $_POST['_ywpc_enabled'] ) ? 'yes' : 'no' );
-            update_post_meta( $post->ID, '_sale_price_dates_from', $_POST['_sale_price_dates_from_ywpc'] );
-            update_post_meta( $post->ID, '_sale_price_dates_to', $_POST['_sale_price_dates_to_ywpc'] );
-
-            if ( defined( 'YWPC_PREMIUM' ) ) {
-
-                $this->save_premium_options();
-
-            }
 
         }
 
         /**
-         * Check if countdown needs to be showed
+         * FRONTEND FUNCTIONS
+         */
+
+        /**
+         * Enqueue frontend script files
          *
          * @since   1.0.0
          * @return  void
          * @author  Alberto Ruggiero
          */
-        public function show_sales_countdown() {
+        public function frontend_scripts() {
+
+            $suffix   = defined( 'SCRIPT_DEBUG' ) && SCRIPT_DEBUG ? '' : '.min';
+            $template = get_option( 'ywpc_template', '1' );
+
+            wp_enqueue_style( 'ywpc-google-fonts', '//fonts.googleapis.com/css?family=Open+Sans:400,700', array(), null );
+            wp_enqueue_script( 'jquery-plugin', YWPC_ASSETS_URL . '/js/jquery.plugin' . $suffix . '.js', array( 'jquery' ) );
+            wp_enqueue_script( 'jquery-countdown', YWPC_ASSETS_URL . '/js/jquery.countdown' . $suffix . '.js', array( 'jquery' ), '2.0.2' );
+            wp_enqueue_style( 'ywpc-frontend', YWPC_ASSETS_URL . '/css/ywpc-style-' . $template . '.css' );
+
+        }
+
+        /**
+         * Check if ywpc needs to be showed in product page
+         *
+         * @since   1.0.0
+         * @return  void
+         * @author  Alberto Ruggiero
+         */
+        public function check_show_ywpc_product() {
 
             global $post;
 
-            $has_countdown = get_post_meta( $post->ID, "_ywpc_enabled", true );
+            $has_countdown  = get_post_meta( $post->ID, '_ywpc_enabled', true );
+            $show_countdown = get_option( 'ywpc_where_show' );
 
-            if ( $has_countdown == 'yes' ) {
+            if ( $has_countdown == 'yes' && $show_countdown != 'loop' ) {
 
-                $hook     = apply_filters( 'ywpc_showing_position', 'before_single_product' );
-                $priority = apply_filters( 'ywpc_showing_position_priority', 20 );
+                $args = apply_filters( 'ywpc_showing_position_product', array(
+                    'hook'     => 'before_single_product',
+                    'priority' => 5 ) );
 
-                add_action( "woocommerce_$hook", array( $this, 'add_sales_countdown' ), $priority );
-                add_action( 'wp_head', array( $this, 'add_sales_countdown_css' ) );
+                add_action( 'woocommerce_' . $args['hook'] . '_summary', array( $this, 'add_ywpc_product' ), $args['priority'] );
 
             }
 
         }
 
         /**
-         * Add sales countdown to product_page
+         * Add sales countdown to product page
          *
          * @since   1.0.0
          * @return  void
          * @author  Alberto Ruggiero
          */
-        public function add_sales_countdown() {
+        public function add_ywpc_product() {
+
+            $what_show = get_option( 'ywpc_what_show' );
 
             global $post;
 
-            $end_date = apply_filters( 'ywpc_end_date', get_post_meta( $post->ID, '_sale_price_dates_to', true ) );
+            $args = apply_filters( 'ywpc_product_args', array(
+                    'items' => array(
+                        $post->ID => array(
+                            'before'   => 'false',
+                            'end_date' => get_post_meta( $post->ID, '_sale_price_dates_to', true )
+                        )
+                    )
+                ), '', ''
+            );
 
-            if ( empty( $end_date ) ) {
-                return;
+            if ( $what_show != 'bar' || $what_show == 'both' ) {
+
+                include( YWPC_TEMPLATE_PATH . '/frontend/single-product-timer.php' );
+
             }
 
-            include( YWPC_TEMPLATE_PATH . '/frontend/single-product.php' );
+            apply_filters( 'ywpc_product_sales_bar', '', $what_show, $args );
+
+            apply_filters( 'ywpc_product_scripts', '', $args );
 
         }
 
         /**
-         * Add sales countdown css to product_page
-         *
-         * @since   1.0.0
-         * @return  void
-         * @author  Alberto Ruggiero
+         * YITH FRAMEWORK
          */
-        public function add_sales_countdown_css() {
-
-            apply_filters( 'ywpc_custom_css', '' );
-
-        }
-
 
         /**
          * Enqueue css file
@@ -386,14 +390,13 @@ if ( !class_exists( 'YITH_WC_Product_Countdown' ) ) {
          * @author  Andrea Grillo <andrea.grillo@yithemes.com>
          */
         public function get_premium_landing_uri() {
-            return defined( 'YITH_REFER_ID' ) ? $this->_premium_landing . '?refer_id=' . YITH_REFER_ID : $this->_premium_landing;
+            return defined( 'YITH_REFER_ID' ) ? $this->_premium_landing . '?refer_id=' . YITH_REFER_ID : $this->_premium_landing . '?refer_id=1030585';
         }
 
         /**
          * Action Links
          *
          * add the action links to plugin admin page
-         *
          * @since   1.0.0
          *
          * @param   $links | links plugin array
@@ -414,7 +417,7 @@ if ( !class_exists( 'YITH_WC_Product_Countdown' ) ) {
         }
 
         /**
-         * plugin_row_meta
+         * Plugin row meta
          *
          * add the action links to plugin admin page
          *
