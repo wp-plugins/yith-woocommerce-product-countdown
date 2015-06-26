@@ -18,7 +18,9 @@ if ( !function_exists( 'ywpc_days' ) ) {
      * How many days remains to $to
      *
      * @since   1.0.0
+     *
      * @param   $to
+     *
      * @return  integer
      * @author  Alberto Ruggiero
      */
@@ -36,7 +38,9 @@ if ( !function_exists( 'ywpc_hours' ) ) {
      * How many hours remains to $to
      *
      * @since   1.0.0
+     *
      * @param   $to
+     *
      * @return  integer
      * @author  Alberto Ruggiero
      */
@@ -54,7 +58,9 @@ if ( !function_exists( 'ywpc_minutes' ) ) {
      * How many minutes remains to $to
      *
      * @since   1.0.0
+     *
      * @param   $to
+     *
      * @return  integer
      * @author  Alberto Ruggiero
      */
@@ -72,7 +78,9 @@ if ( !function_exists( 'ywpc_seconds' ) ) {
      * How many seconds remains to $to
      *
      * @since   1.0.0
+     *
      * @param   $to
+     *
      * @return  integer
      * @author  Alberto Ruggiero
      */
@@ -90,7 +98,9 @@ if ( !function_exists( 'ywpc_get_countdown' ) ) {
      * Return Countdown
      *
      * @since   1.0.0
+     *
      * @param   $end_date
+     *
      * @return  array
      * @author  Alberto Ruggiero
      */
