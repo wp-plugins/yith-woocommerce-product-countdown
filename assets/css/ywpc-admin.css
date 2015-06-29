@@ -1,0 +1,23 @@
+.woocommerce_options_panel .sales_countdown_dates_fields .short:first-of-type {
+    margin-bottom: 1em;
+}
+
+.woocommerce_options_panel .sales_countdown_dates_fields .short:nth-of-type(2) {
+    clear: left;
+}
+
+#woocommerce-product-data ul.wc-tabs li.product_countdown_tab a:before {
+    content: "\e012";
+}
+
+.ywpc-sales .form-field img.help_tip {
+    margin-left: 0;
+}
+
+.ywpc-preview {
+    width: 100%
+}
+
+.ywpc-preview * {
+    box-sizing: border-box;
+}
