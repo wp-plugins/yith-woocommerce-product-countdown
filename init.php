@@ -5,7 +5,7 @@
  * Description: The right time for the right product.
  * Author: Yithemes
  * Text Domain: ywpc
- * Version: 1.0.0
+ * Version: 1.0.1
  * Author URI: http://yithemes.com/
  */
 
@@ -34,7 +34,7 @@ function ywpc_install_woocommerce_admin_notice() {
 }
 
 if ( !defined( 'YWPC_VERSION' ) ) {
-    define( 'YWPC_VERSION', '1.0.0' );
+    define( 'YWPC_VERSION', '1.0.1' );
 }
 
 if ( !defined( 'YWPC_FREE_INIT' ) ) {
